@@ -41,6 +41,8 @@ async def select(sql, args, size=None):
     # 异步等待连接池对象返回可以连接线程，with语句则封装了清理（关闭conn）和处理异常的工作
     async with __pool.get() as conn:
         # 打开一个DictCursor,它与普通游标的不同在于,以dict形式返回结果
+        # 即原来返回类似的tuple结果集合 ((1000L, 0L), (2000L, 0L), (3000L, 0L))
+        # 现在返回dict结果集合 ({'user_id': 0L, 'blog_id': 1000L}, {'user_id': 0L, 'blog_id': 2000L}, {'user_id': 0L, 'blog_id': 3000L})
         async with conn.cursor(aiomysql.DictCursor) as cur:
             # SQL语句的占位符是?，而MySQL的占位符是%s, 这里要做一下替换,
             # args是sql语句对应占位符的参数
@@ -185,7 +187,7 @@ class Model(dict, metaclass=ModelMetaclass):
         rs = await select('%s where `%s`=?' % (cls.__select__, cls.__primary_key__), [pk], 1)
         if len(rs) == 0:
             return None
-        # **表示关键字参数，将rs[0]转换成关键字参数元组，rs[0]为dict
+        # **表示关键字参数，将rs[0]即结果集合中的第一个（也是唯一一个）转换成关键字参数元组，rs[0]为dict
         # 通过<class '__main__.User'>(位置参数元组)，产生一个实例对象
         # 注意,我们在select函数中,打开的是DictCursor,它会以dict的形式返回结果
         return cls(**rs[0])
@@ -225,7 +227,8 @@ class Model(dict, metaclass=ModelMetaclass):
         # 根据WHERE条件查找，但返回的是整数，适用于select count(*)类型的SQL
         ' find number by select and where. '
         # 这里的 _num_ 为别名，任何客户端都可以按照这个名称引用这个列，就像它是个实际的列一样
-        sql = ['select %s _num_ from `%s`' % (selectField, cls.__table__)]
+        # 原来是sql = ['select %s _num_ from `%s`' % (selectField, cls.__table__)]，感觉有错
+        sql = ['select count(%s) _num_ from `%s`' % (selectField, cls.__table__)]
         if where:
             sql.append('where')
             sql.append(where)
