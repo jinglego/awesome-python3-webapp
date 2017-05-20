@@ -227,8 +227,8 @@ class Model(dict, metaclass=ModelMetaclass):
         # 根据WHERE条件查找，但返回的是整数，适用于select count(*)类型的SQL
         ' find number by select and where. '
         # 这里的 _num_ 为别名，任何客户端都可以按照这个名称引用这个列，就像它是个实际的列一样
-        # 原来是sql = ['select %s _num_ from `%s`' % (selectField, cls.__table__)]，感觉有错
-        sql = ['select count(%s) _num_ from `%s`' % (selectField, cls.__table__)]
+        sql = ['select %s _num_ from `%s`' % (selectField, cls.__table__)]
+        # sql = ['select count(%s) _num_ from `%s`' % (selectField, cls.__table__)]
         if where:
             sql.append('where')
             sql.append(where)
