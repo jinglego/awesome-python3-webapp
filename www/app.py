@@ -13,6 +13,7 @@ from jinja2 import Environment, FileSystemLoader
 
 import orm
 from coroweb import add_routes, add_static
+from handlers import cookie2user, COOKIE_NAME
 
 def index(request):
     # 不加content_type的话打开链接会直接下载
@@ -70,6 +71,22 @@ async def data_factory(app, handler):
                 logging.info('request form: %s' % str(request.__data__))
         return (await handler(request))
     return parse_data
+
+# 解析cookie，并将登录用户绑定到request对象上。这样，后续的URL处理函数就可以直接拿到登录用户
+async def auth_factory(app, handler):
+    async def auth(request):
+        logging.info('check user: %s %s' % (request.method, request.path))
+        request.__user__ = None
+        cookie_str = request.cookies.get(COOKIE_NAME)
+        if cookie_str:
+            user = await cookie2user(cookie_str)
+            if user:
+                logging.info('set current user: %s' % user.email)
+                request.__user__ = user
+        if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin):
+            return web.HTTPFound('/signin')
+        return (await handler(request))
+    return auth
 
 # 将handler的返回值转换为web.Response对象，返回给客户端
 async def response_factory(app, handler):
@@ -143,7 +160,7 @@ async def init(loop):
     (3)create a server socket with Server as a protocol factory
     """
     # 创建web应用
-    app = web.Application(loop=loop, middlewares=[logger_factory, response_factory])
+    app = web.Application(loop=loop, middlewares=[logger_factory, auth_factory, response_factory])
     init_jinja2(app, filters=dict(datetime=datetime_filter))
     # 将处理函数与对应的URL绑定，注册到创建的app.router中
     # 此处把通过GET方式传过来的对根目录的请求转发给index函数处理

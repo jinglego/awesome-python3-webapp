@@ -130,7 +130,7 @@ class RequestHandler(object):
                     # aiohttp文档 request的coroutine json(*, loads=json.loads)
                     # Read request body decoded as json. Accepts str and returns dict with parsed JSON. 
                     params = await request.json()
-                    if not isinstancce(params, dict):
+                    if not isinstance(params, dict):
                         return web.HTTPBadRequest('JSON body must be object.')
                     kw = params
                 # 两者表示消息主题是表单
