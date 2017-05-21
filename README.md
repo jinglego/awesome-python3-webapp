@@ -9,7 +9,7 @@
 * 具体的各URL处理函数，由定义的get()和post()装饰器将URL信息绑在一个函数上
 * 中间件，把通用的模块（如logger_factory、response_factory等）抽出来，不用在每个URL的handler里都写
 * 页面渲染，采用jinja2模版，负责对handler返回的结果进行显示（替换变量）
-* 前端页面，由HTML、CSS、Javasript组成，使用UIkit、Vue(不懂前端T-T)
+* 前端页面，由HTML、CSS、Javasript组成，使用UIkit、Vue(不懂前端😭)
 
 期间参考了好几份注释，对他们表示感谢：
 * [Engine-Treasure](https://github.com/Engine-Treasure/awesome-python3-webapp)
